@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
 
     val sRetrofit = initRetrofit()
-    private const val MOVIE_URL = "https://api.themoviedb.org/3/"
+    private const val MOVIE_URL = "https://api.themoviedb.org/3/api_key=e3269631c1a855227a37cefab44ad995"
 
     private fun initRetrofit(): Retrofit =
         Retrofit.Builder()
