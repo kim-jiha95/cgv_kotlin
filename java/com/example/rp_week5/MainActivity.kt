@@ -1,42 +1,63 @@
 package com.example.rp_week5
 
 import android.content.Intent
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.os.*
+import android.util.Base64
 import android.util.Log
 import android.view.View
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.size
 import androidx.viewpager2.widget.ViewPager2
 import com.example.rp_week5.databinding.ActivityMainBinding
 import com.example.rp_week5.movies_models.MovieData
 import com.example.rp_week5.ticket.TicketActivity
 import com.kakao.sdk.auth.AuthApiClient
 import com.kakao.sdk.common.model.KakaoSdkError
-import com.kakao.sdk.common.util.Utility
 import com.kakao.sdk.user.UserApiClient
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 
 data class Movies(
 //    var img: Int,
-    var img: String,
-    var name: String,
-    var egg_per: String,
-    var ratio: String,
+        var img: String,
+        var name: String,
+        var egg_per: String,
+        var ratio: String,
 )
 
 val images = arrayOf(
-    "https://img.cgv.co.kr/Front/Main/2021/0811/16286741181960.jpg",
-    "https://img.cgv.co.kr/Front/Main/2021/0730/16276122563440.jpg",
-    "https://img.cgv.co.kr/Front/Main/2021/0729/16275238825760.jpg"
+        "https://img.cgv.co.kr/Front/Main/2021/0913/16315036396800.jpg",
+        "https://img.cgv.co.kr/Front/Main/2021/1013/16340960278770.jpg",
+        "https://img.cgv.co.kr/Front/Main/2021/1012/16340063550260.jpg",
 )
 
 class MainActivity : AppCompatActivity() {
 
+
+    private fun getHashKey() {
+        var packageInfo: PackageInfo? = null
+        try {
+            packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        }
+        if (packageInfo == null) Log.e("KeyHash", "KeyHash:null")
+        for (signature in packageInfo!!.signatures) {
+            try {
+                val md = MessageDigest.getInstance("SHA")
+                md.update(signature.toByteArray())
+                Log.d("KeyHash", Base64.encodeToString(md.digest(), Base64.DEFAULT))
+            } catch (e: NoSuchAlgorithmException) {
+                Log.e("KeyHash", "Unable to get MessageDigest. signature=$signature", e)
+            }
+        }
+    }
 
     var MoviesArrayList = ArrayList<Movies>()
 //    var handler = Handler(Looper.getMainLooper())
@@ -47,11 +68,30 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var imageSliderAdapter: ImageSliderAdapter
     private lateinit var binding: ActivityMainBinding
+    @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        try{
+            val info = packageManager.getPackageInfo(packageName,
+                    PackageManager.GET_SIGNING_CERTIFICATES)
+            val signatures = info.signingInfo.apkContentsSigners
+            val md = MessageDigest.getInstance("SHA")
+            for(signature in signatures) {
+                val md: MessageDigest
+                md = MessageDigest.getInstance("SHA")
+                for (signature in signatures){
+                    val md: MessageDigest
+                    md = MessageDigest.getInstance("SHA")
+                    md.update(signature.toByteArray())
+                    val key = String(Base64.encode(md.digest(), 0))
+                    Log.d("Hash Key", "!!$key!!")
+                }
+            }
+        }catch (e: Exception){
+            Log.e("name not found", e.toString())
+        }
 //        var keyHash = Utility.getKeyHash(this)
 //        Log.d("hash", keyHash)
 
@@ -67,9 +107,9 @@ class MainActivity : AppCompatActivity() {
         binding.mainAd.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
             override fun onPageScrolled(
-                position: Int,
-                positionOffset: Float,
-                positionOffsetPixels: Int,
+                    position: Int,
+                    positionOffset: Float,
+                    positionOffsetPixels: Int,
             ) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
                 Log.d("TEST onPageScrolled", position.toString())
@@ -120,7 +160,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-        getMovieData("3f4eafbaa2f85e95ad46f8feff025dc9", "ko-KR", 1, "KR")
+        getMovieData("e3269631c1a855227a37cefab44ad995", "ko-KR", 1, "KR")
 
 //        MoviesArrayList.add(0, movieAdapter.dataList[0])
 
@@ -142,23 +182,23 @@ class MainActivity : AppCompatActivity() {
         val movieInterface = RetrofitClient.sRetrofit.create(MovieInterface::class.java)
 
         movieInterface.getNowPlaying(api_key, language, page, region).enqueue(object :
-            Callback<MovieData> {
+                Callback<MovieData> {
 
             override fun onResponse(
-                call: Call<MovieData>,
-                response: Response<MovieData>,
+                    call: Call<MovieData>,
+                    response: Response<MovieData>,
             ) {
                 if (response.isSuccessful) {
 
                     val result = response.body() as MovieData
                     for (i in 0..5) {
                         MoviesArrayList.add(
-                            Movies(
-                                "https://image.tmdb.org/t/p/w500" + result.results[i].poster_path,
-                                result.results[i].title,
-                                result.results[i].popularity.toString(),
-                                result.results[i].vote_average.toString()
-                            )
+                                Movies(
+                                        "https://image.tmdb.org/t/p/w500" + result.results[i].poster_path,
+                                        result.results[i].title,
+                                        result.results[i].popularity.toString(),
+                                        result.results[i].vote_average.toString()
+                                )
                         )
                     }
 

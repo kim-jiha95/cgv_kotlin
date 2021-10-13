@@ -8,7 +8,7 @@ import retrofit2.http.Query
 interface MovieInterface {
 
 
-    @GET("movie/now_playing")
+    @GET("movie/upcoming")
     fun getNowPlaying(
         @Query("api_key") api_key: String,
         @Query("language") language: String,
